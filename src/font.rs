@@ -15,12 +15,6 @@
 //! A simple renderer for TrueType fonts
 
 #[cfg(not(feature = "std"))]
-use core::intrinsics;
-
-#[cfg(feature = "std")]
-use std::intrinsics;
-
-#[cfg(not(feature = "std"))]
 use alloc::collections::BTreeMap;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
@@ -42,6 +36,9 @@ use std::fmt::{Debug, Display, Formatter};
 
 use geom::{affine_pt, Affine, Point};
 use raster::Raster;
+
+#[cfg(not(feature = "std"))]
+use float32::Float32;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct Tag(u32);
@@ -725,10 +722,10 @@ impl<'a> Font<'a> {
     ) -> (Metrics, Affine) {
         let ppem = self.head.units_per_em();
         let scale = (size as f32) / (ppem as f32);
-        let l = unsafe { intrinsics::floorf32(xmin as f32 * scale) } as i32;
-        let t = unsafe { intrinsics::floorf32(ymax as f32 * -scale) } as i32;
-        let r = unsafe { intrinsics::ceilf32(xmax as f32 * scale) } as i32;
-        let b = unsafe { intrinsics::ceilf32(ymin as f32 * -scale) } as i32;
+        let l = (xmin as f32 * scale).floor() as i32;
+        let t = (ymax as f32 * -scale).floor() as i32;
+        let r = (xmax as f32 * scale).ceil() as i32;
+        let b = (ymin as f32 * -scale).ceil() as i32;
         let metrics = Metrics {
             l: l,
             t: t,

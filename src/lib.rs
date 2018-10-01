@@ -15,7 +15,7 @@
 //! A very high performance font renderer.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![feature(alloc, core_intrinsics)]
+#![cfg_attr(not(feature = "std"), feature(alloc, core_intrinsics))]
 
 #[cfg(not(feature = "std"))]
 #[macro_use]
@@ -27,3 +27,6 @@ pub mod accumulate;
 pub mod font;
 pub mod geom;
 pub mod raster;
+
+#[cfg(not(feature = "std"))]
+mod float32;

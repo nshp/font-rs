@@ -75,18 +75,12 @@ pub fn accumulate(src: &[f32]) -> Vec<u8> {
 
 #[cfg(not(feature = "sse"))]
 pub fn accumulate(src: &[f32]) -> Vec<u8> {
-    #[cfg(not(feature = "std"))]
-    use core::intrinsics::fabsf32;
-
-    #[cfg(feature = "std")]
-    use std::intrinsics::fabsf32;
-
-    let mut acc = 0.0;
-    src.iter()
-        .map(|c| {
+    let mut acc = 0.0f32;
+    src.into_iter()
+        .map(|&c| {
             // This would translate really well to SIMD
             acc += c;
-            let y = unsafe { fabsf32(acc) };
+            let y = acc.abs();
             let y = if y < 1.0 { y } else { 1.0 };
             (255.0 * y) as u8
         })
@@ -101,8 +95,8 @@ mod tests {
     //  accumulate fn
     fn accumulate_simple_impl(src: &[f32]) -> Vec<u8> {
         let mut acc = 0.0;
-        src.iter()
-            .map(|c| {
+        src.into_iter()
+            .map(|&c| {
                 acc += c;
                 let y = acc.abs();
                 let y = if y < 1.0 { y } else { 1.0 };

@@ -15,16 +15,13 @@
 //! An antialiased rasterizer for quadratic Beziers
 
 #[cfg(not(feature = "std"))]
-use core::intrinsics;
-
-#[cfg(feature = "std")]
-use std::intrinsics;
-
-#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use accumulate::accumulate;
 use geom::Point;
+
+#[cfg(not(feature = "std"))]
+use float32::Float32;
 
 // TODO: sort out crate structure. Right now we want this when compiling raster as a binary,
 // but need it commented out when compiling showttf
@@ -39,18 +36,6 @@ pub struct Raster {
 // TODO: is there a faster way? (investigate whether approx recip is good enough)
 fn recip(x: f32) -> f32 {
     x.recip()
-}
-
-fn fsqrt32(f: f32) -> f32 {
-    unsafe { intrinsics::sqrtf32(f) }
-}
-
-fn floor32(f: f32) -> f32 {
-    unsafe { intrinsics::floorf32(f) }
-}
-
-fn ceil32(f: f32) -> f32 {
-    unsafe { intrinsics::ceilf32(f) }
 }
 
 impl Raster {
@@ -78,16 +63,16 @@ impl Raster {
         if p0.y < 0.0 {
             x -= p0.y * dxdy;
         }
-        let ymin = self.h.min(ceil32(p1.y) as usize);
+        let ymin = self.h.min(p1.y.ceil() as usize);
         for y in y0..ymin {
             let linestart = y * self.w;
             let dy = ((y + 1) as f32).min(p1.y) - (y as f32).max(p0.y);
             let xnext = x + dxdy * dy;
             let d = dy * dir;
             let (x0, x1) = if x < xnext { (x, xnext) } else { (xnext, x) };
-            let x0floor = floor32(x0);
+            let x0floor = x0.floor();
             let x0i = x0floor as i32;
-            let x1ceil = ceil32(x1);
+            let x1ceil = x1.ceil();
             let x1i = x1ceil as i32;
             if x1i <= x0i + 1 {
                 let xmf = 0.5 * (x + xnext) - x0floor;
@@ -127,7 +112,7 @@ impl Raster {
             return;
         }
         let tol = 3.0;
-        let n = 1 + fsqrt32(fsqrt32(tol * (devx * devx + devy * devy))) as usize;
+        let n = 1 + (tol * (devx * devx + devy * devy)).sqrt().sqrt().floor() as usize;
         //println!("n = {}", n);
         let mut p = *p0;
         let nrecip = recip(n as f32);
